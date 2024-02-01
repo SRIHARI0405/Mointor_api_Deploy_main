@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, Response
 import json
-from pyngrok import ngrok
 from instagrapi import Client
 import asyncio
 import time
@@ -142,8 +141,7 @@ def get_reel_info(reel_url):
                 'message': 'Invalid reel URL format',
                 'data': None
             }
-            return jsonify(response)
-        
+            return jsonify(response)        
         reel_id_match = re.search(r'/reel/([A-Za-z0-9_-]+)', reel_url)
         if reel_id_match:
             reel_id = reel_id_match.group(1)
