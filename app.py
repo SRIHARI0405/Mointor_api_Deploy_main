@@ -13,14 +13,14 @@ app = Flask(__name__)
 proxy = "socks5://yoqytafd-6:2dng483b96qx@p.webshare.io:80"
 cl = Client(proxy=proxy)
 
+
 try:
     cl.load_settings('session-loop.json')
     cl.login(INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD)
 except Exception as e:
     print(f"Instagram login failed: {e}")
 
-def fetch_last_n_days_reels(username, n=18):
-    user_id = cl.user_id_from_username(username)
+def fetch_last_n_days_reels(user_id, n):
     media = cl.user_medias(user_id, amount=n)
     reels = [item for item in media if item.media_type == 2][:n]
     reels.sort(key=lambda x: x.taken_at, reverse=True)
@@ -63,7 +63,7 @@ def calculate_engagement_rate_reels(reel_Data):
 
 async def get_profile(username):
     try:
-        user_info = cl.user_info_by_username(username)
+        user_info = cl.user_info_by_username(username,use_cache=False)
         if user_info.is_private:
             response = {
                 'success': True,
@@ -72,7 +72,7 @@ async def get_profile(username):
             }
             return jsonify(response)
 
-        reels_data =  fetch_last_n_days_reels(username, n=18)
+        reels_data =  fetch_last_n_days_reels(user_info.pk, n=18)
         engagement_rate = calculate_engagement_rate(reels_data)
         
         if not reels_data:
@@ -141,7 +141,8 @@ def get_reel_info(reel_url):
                 'message': 'Invalid reel URL format',
                 'data': None
             }
-            return jsonify(response)        
+            return jsonify(response)
+        
         reel_id_match = re.search(r'/reel/([A-Za-z0-9_-]+)', reel_url)
         if reel_id_match:
             reel_id = reel_id_match.group(1)
@@ -153,8 +154,7 @@ def get_reel_info(reel_url):
                     'data': None
                 }
                 return jsonify(response)
-            reel_data = cl.media_info(reel_data_pk)
-            
+            reel_data = cl.media_info(reel_data_pk, use_cache=False)
             if not reel_data:
                 return {
                     'success': False,
