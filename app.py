@@ -26,6 +26,13 @@ def fetch_last_n_days_reels(user_id, n):
     reels.sort(key=lambda x: x.taken_at, reverse=True)
     return reels
 
+def fetch_last_n_days_reels_url(username, n):
+    user_id = cl.user_info_by_username(username)
+    media = cl.user_medias(user_id.pk, amount=n)
+    reels = [item for item in media if item.media_type == 2][:n]
+    reels.sort(key=lambda x: x.taken_at, reverse=True)
+    return reels
+
 def brand_name_usertag(reels_data):
     usernames = []
     for reel in reels_data:
@@ -74,14 +81,14 @@ async def get_profile(username):
 
         reels_data =  fetch_last_n_days_reels(user_info.pk, n=18)
         engagement_rate = calculate_engagement_rate(reels_data)
-        
+
         if not reels_data:
             return {
                 'success': False,
                 'message': 'No reels data available',
                 'data': None
             }
-        
+
         latest_post = reels_data[0]
         latest_post_engagement_rate = calculate_engagement_rate([latest_post])
         brand_name_usertag_reel =  brand_name_usertag([latest_post])
@@ -92,8 +99,8 @@ async def get_profile(username):
         view_count = latest_post.view_count
         thumbnail_urls = str(latest_post.thumbnail_url)
         hashtags = re.findall(r'#\w+', caption_text)
-        mentions = re.findall(r'@\w+', caption_text)  
-        
+        mentions = re.findall(r'@\w+', caption_text)
+
         response =  {
             'success': True,
             'message': 'Data retrieved successfully',
@@ -142,7 +149,7 @@ def get_reel_info(reel_url):
                 'data': None
             }
             return jsonify(response)
-        
+
         reel_id_match = re.search(r'/reel/([A-Za-z0-9_-]+)', reel_url)
         if reel_id_match:
             reel_id = reel_id_match.group(1)
@@ -169,12 +176,12 @@ def get_reel_info(reel_url):
             brand_name_usertag_reel =  brand_name_usertag([reel_data])
             brand_name_user_reel =  brand_name_user([reel_data])
             reel_username = reel_data.user.username
-            reels_data1 = fetch_last_n_days_reels(reel_username, n=18)
+            reels_data1 = fetch_last_n_days_reels_url(reel_username, n=18)
             engagement_rate_reel = calculate_engagement_rate(reels_data1)
             engagement_rate_reel_url =  calculate_engagement_rate_reels(reel_data)
             mentions = re.findall(r'@\w+', caption_text)
             hashtags = re.findall(r'#\w+', caption_text)
-            
+
             response = {
                 'success': True,
                 'message': 'Reel data retrieved successfully',
